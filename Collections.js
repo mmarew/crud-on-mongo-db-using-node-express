@@ -47,7 +47,6 @@ router.put(
       }
 
       const db = client.db(databaseName);
-
       // Rename the collection
       await db.renameCollection(oldCollectionName, newCollectionName);
 

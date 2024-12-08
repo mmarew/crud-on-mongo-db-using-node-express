@@ -3,23 +3,33 @@ const router = express.Router();
 const client = require("./MongoConfig"); // Ensure this exports a connected MongoClient instance
 const { ObjectId } = require("mongodb");
 
-// Create a new document
+// Create a new document or multiple documents
 router.post("/Document/:databaseName/:collectionName", async (req, res) => {
   try {
     const { databaseName, collectionName } = req.params;
-    const document = req.body;
-    console.log("document", document);
+    const documents = req.body; // Expecting an array of documents
+    console.log("documents", documents);
+
     if (!databaseName || !collectionName) {
       return res
         .status(400)
         .json({ error: "Database and collection names are required." });
     }
 
+    if (!Array.isArray(documents) || documents.length === 0) {
+      return res.status(400).json({
+        error: "The request body must be a non-empty array of documents.",
+      });
+    }
+
     const db = client.db(databaseName);
     const collection = db.collection(collectionName);
-    const result = await collection.insertMany(document);
+    const result = await collection.insertMany(documents);
 
-    res.status(201).json(result.ops[0]);
+    res.status(201).json({
+      message: `${result.insertedCount} documents inserted successfully.`,
+      insertedIds: result.insertedIds,
+    });
   } catch (error) {
     console.error("Error creating document:", error);
     res.status(500).json({ error: "Internal Server Error" });
